@@ -1,5 +1,4 @@
 import mysql from 'mysql2'
-// import 'dotenv/config'
 
 const pool = mysql
 	.createPool({
@@ -10,14 +9,19 @@ const pool = mysql
 	})
 	.promise()
 
-export const readDatabase = async (id = 0) => {
-	if (!id) {
-		const [result] = await pool.query('SELECT * FROM users')
-		return result
-	}
+export const readFromDatabase = async (id = 0) => {
+	try {
+		if (!id) {
+			const [result] = await pool.query('SELECT * FROM users')
+			result = await JSON.stringify(result)
+			return result
+		}
 
-	const [result] = await pool.query('SELECT * FROM users WHERE id=?', [id])
-	return result
+		const [result] = await pool.query('SELECT * FROM users WHERE id=?', [id])
+		return result
+	} catch (err) {
+		throw new Error('Failed to GET user with ID: ' + id, err)
+	}
 }
 
 export const importUser = async (first_name, last_name, email = '/') => {
@@ -39,11 +43,11 @@ export const deleteUser = async (deleteParamater = 0) => {
 
 	if (deleteParamater.isNan()) {
 		//if its not a number, it's name
-		await pool.query('delete from users where first_name = ?', [deleteParamater])
+		await pool.query('DELETE FROM users WHERE first_name = ?', [deleteParamater])
 		console.log(`Successfuly deleted user with first_name : ${deleteParamater}`)
 	} else {
 		//if its number, delete by ID
-		await pool.query('delete from users where id = ?', [deleteParamater])
+		await pool.query('DELETE FROM users WHERE id = ?', [deleteParamater])
 		console.log(`Successfuly deleted user with ID : ${deleteParamater}`)
 	}
 }
