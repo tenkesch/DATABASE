@@ -71,13 +71,10 @@ export const SQL = {
 		} else throw new Error('[DATABASE ERROR]: Paramater must be either string or number!')
 	},
 
-	fetchEmail: async () => {
-		const [emails] = await pool.query('SELECT email FROM users')
-		return emails
-	},
-
 	readByEmail: async (email) => {
 		const [userData] = await pool.query('SELECT * FROM users WHERE email=?', email)
+		if (userData.length === 0) return 0
+
 		return userData
 	},
 }
