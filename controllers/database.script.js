@@ -17,7 +17,7 @@ const pool = mysql
 
 export const SQL = {
 	read: async (searchParam = 0) => {
-		if (!isValidParam(searchParam))
+		if (!isValidParam(searchParam) && searchParam != 0)
 			throw new Error(`[ DATABASE ERROR ] : Invalid Parameter : [${searchParam}]`)
 
 		const isByID = typeof searchParam === 'number'
@@ -32,7 +32,8 @@ export const SQL = {
 				: 'SELECT * FROM users WHERE name=?'
 
 		const [rows] = await pool.query(query, searchParam)
-		if (rows.length === 0) return 0
+		if (rows.length === 0)
+			throw new Error(`There is no user with such ID [${searchParam}]`)
 
 		return rows
 	},
@@ -46,7 +47,7 @@ export const SQL = {
 		invalidParams.forEach((param) => {
 			console.warn(`[DATABASE ERROR] : Invalid ${param} format`)
 		})
-		if (invalidParams) return 0
+		if (invalidParams) return 'error'
 
 		try {
 			const [result] = await pool.query(
@@ -58,7 +59,10 @@ export const SQL = {
 			)
 			return 1
 		} catch (error) {
-			console.error('[DATABASE ERROR]: Failed to insert user in database : ', error.message)
+			console.error(
+				'[DATABASE ERROR]: Failed to insert user in database : ',
+				error.message,
+			)
 			return 0
 		}
 	},
@@ -107,12 +111,12 @@ function isValidPassword(password) {
 	return response
 }
 
-function isValidParam() {
+function isValidParam(param) {
 	if (
-		(typeof searchParam === 'number' && searchParam > 0) ||
-		(typeof searchParam === 'string' && searchParam.length >= MIN_USERNAME_LENGTH)
+		(typeof param === 'number' && param > 0) ||
+		(typeof param === 'string' && param.length >= MIN_USERNAME_LENGTH)
 	)
-		return 1
+		return true
 
-	return 0
+	return false
 }

@@ -9,9 +9,24 @@ if (PORT === 3000)
 
 app.use(express.static(path.join(import.meta.dirname, 'src')))
 
+app.get('/createUser', async (req, res) => {
+	const user = {
+		name: req.query.name,
+		email: req.query.email,
+		password: req.query.password,
+	}
+
+	res.send(user)
+})
+
 app.get('/user', async (req, res) => {
 	try {
 		const id = parseInt(req.query.id)
+
+		id
+			? console.log(`Client requested user with id: [${id}]`)
+			: console.log('Client requested all users from DB')
+
 		const userData = id ? await SQL.read(id) : await SQL.read()
 		res.json({ success: true, data: userData })
 	} catch (err) {
