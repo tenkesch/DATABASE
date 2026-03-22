@@ -38,7 +38,7 @@ readUsersForm.addEventListener('submit', async (e) => {
 	const formData = new FormData(e.target)
 	const inputValue = parseInt(formData.get('inputBar'))
 
-	if (!inputValue) {
+	if (!inputValue && !(inputValue === 0)) {
 		console.warn('User ID is required!')
 		return
 	}

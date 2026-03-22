@@ -1,6 +1,12 @@
-const logger = () => {
-	requestedID > 0
-		? console.log(`Client requested user with id: [${requestedID}]`)
-		: console.log('Client requested all users from DB')
-	return
+export function logger(req, res, next) {
+	const timestamp = new Date().toISOString()
+	const { method, url } = req
+
+	res.on('finish', () => {
+		const status = res.statusCode
+		const statusLabel = status >= 400 ? 'ERROR' : 'INFO'
+		console.log(`[${timestamp}] [${statusLabel}] ${method} ${url} → ${status}`)
+	})
+
+	next()
 }

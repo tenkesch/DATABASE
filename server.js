@@ -2,6 +2,8 @@ import 'dotenv/config'
 import path from 'path'
 import express from 'express'
 import { SQL } from './controllers/database.script.js'
+import { logger } from './middlewares/logger.js'
+
 const app = express()
 const PORT = process.env.PORT || 3000
 if (PORT === 3000)
@@ -10,6 +12,7 @@ if (PORT === 3000)
 //middlewares
 app.use(express.static(path.join(import.meta.dirname, 'src')))
 app.use(express.json())
+app.use(logger)
 
 app.post('/user', async (req, res) => {
 	console.log(req.body)
@@ -30,7 +33,6 @@ app.get('/user', async (req, res) => {
 		})
 
 	try {
-		console.log(typeof requestedID)
 		const userData = await SQL.read(requestedID)
 
 		//Wont run if SQL.read() gives invalid response:
