@@ -1,27 +1,20 @@
-const SubmitForm = document.getElementById('FORM_Search')
-const inputBar = document.getElementById('INPUT_search')
+const readUsersForm = document.getElementById('readUsersForm')
+const newUserForm = document.getElementById('newUserForm')
 
-const INPUT_insertUser_Name = document.getElementById('INPUT_insertUser_Name')
-const INPUT_insertUser_Email = document.getElementById('INPUT_insertUser_Email')
-const INPUT_insertUser_Password = document.getElementById('INPUT_insertUser_Password')
-
-const FORM_insertUser = document.getElementById('FORM_insertUser')
-FORM_insertUser.addEventListener('submit', async (e) => {
+newUserForm.addEventListener('submit', async (e) => {
 	e.preventDefault()
 
-	//pull {name email password} variables that client submitted
-	const dataToSend = {
-		name: INPUT_insertUser_Name.value,
-		email: INPUT_insertUser_Email.value,
-		password: INPUT_insertUser_Password.value,
-	}
+	const formData = new FormData(e.target)
 
-	// dataToSend.forEach((element) => {
-	// 	if (!element) {
-	// 		console.warn(`Invalid parameter [${element}]`)
-	// 		return
-	// 	}
-	// })
+	const userName = formData.get('userName')
+	const userEmail = formData.get('userEmail')
+	const userPassword = formData.get('userPassword')
+
+	const dataToSend = {
+		name: userName,
+		email: userEmail,
+		password: userPassword,
+	}
 
 	const response = await fetch('/user', {
 		method: 'POST',
@@ -39,34 +32,38 @@ FORM_insertUser.addEventListener('submit', async (e) => {
 	console.log(data)
 })
 
-SubmitForm.addEventListener('submit', async (e) => {
+readUsersForm.addEventListener('submit', async (e) => {
 	e.preventDefault()
 
-	const requestedID = inputBar.value
-	const response = await getData(requestedID)
+	const formData = new FormData(e.target)
+	const inputValue = parseInt(formData.get('inputBar'))
 
-	if (!response) return
+	if (!inputValue) {
+		console.warn('User ID is required!')
+		return
+	}
 
+	if (inputValue < 0) {
+		console.warn('Only positive IDs are accepted nigga')
+		return
+	}
+
+	const response = await getData(inputValue)
+	if (!response) {
+		response.message
+			? console.warn(response.message)
+			: console.warn('Server ran into unexpected Error')
+	}
+
+	//beautify json
 	const userData = JSON.stringify(response.data, null, 2)
 	console.log(userData)
 })
 
-async function getData(idNumber = 0) {
-	if (isNaN(idNumber)) {
-		console.warn('Only numbers are accepted!')
-		return
-	}
-
-	// const url = idNumber ? `/user?id=${idNumber}` : '/user'
+async function getData(searchParam = 0) {
+	const url = `/user?id=${searchParam}`
 	try {
-		const response = await fetch('/user', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ requestedID: idNumber }),
-		})
-
+		const response = await fetch(url)
 		const data = await response.json()
 
 		if (!response.ok) {

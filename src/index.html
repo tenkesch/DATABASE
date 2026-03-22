@@ -12,20 +12,19 @@
 	<body>
 		<h1>Learning DATABASE Handling YAAAYYYYY</h1>
 		<p>What do you desire?</p>
-		<form id="FORM_Search">
-			<input id="INPUT_search" type="number" placeholder="Insert ID" />
+		<p>
+			<i>You can search by anything! (name, email or id)</i>
+		</p>
+		<form id="readUsersForm">
+			<input name="inputBar" type="text" placeholder="Insert ID" />
 			<button>Search</button>
 		</form>
 		<!-- <p id="SQL_Values">SQL_Values will be displayed here</p> -->
 		<div id="DIV_insertUser">
-			<form id="FORM_insertUser">
-				<input id="INPUT_insertUser_Name" type="text" placeholder="Insert Name" />
-				<input id="INPUT_insertUser_Email" type="text" placeholder="Insert Email" />
-				<input
-					id="INPUT_insertUser_Password"
-					type="password"
-					placeholder="Insert Password"
-				/>
+			<form id="newUserForm">
+				<input name="userName" type="text" placeholder="Insert Name" />
+				<input name="userEmail" type="text" placeholder="Insert Email" />
+				<input name="userPassword" type="password" placeholder="Insert Password" />
 				<button>Add User to Database</button>
 			</form>
 		</div>

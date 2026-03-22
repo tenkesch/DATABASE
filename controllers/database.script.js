@@ -1,4 +1,7 @@
 import mysql from 'mysql2'
+import bcrypt from 'bcrypt'
+
+const HASH_SALTROUNDS = process.env.BCRYPT_SALTROUNDS
 
 const pool = mysql
 	.createPool({
@@ -11,7 +14,7 @@ const pool = mysql
 
 export const SQL = {
 	read: async (searchParam = 0) => {
-		if (!isValidParam(searchParam) && searchParam != 0)
+		if (!isValidParam(searchParam) && !(searchParam === 0))
 			throw new Error(`[ DATABASE ERROR ] : Invalid Parameter : [${searchParam}]`)
 
 		const isByID = typeof searchParam === 'number'
@@ -38,25 +41,24 @@ export const SQL = {
 		if (!isValidEmail(email)) invalidParams.push('email')
 		if (!isValidName(name)) invalidParams.push('name')
 
+		const passwordHashed = await bcrypt.hash(password, 10)
 		invalidParams.forEach((param) => {
-			console.warn(`[DATABASE ERROR] : Invalid ${param} format`)
+			console.log(`[DATABASE ERROR] : Invalid ${param} format`)
 		})
-		if (invalidParams) return JSON.stringify({ success: false })
+		if (invalidParams.length)
+			return JSON.stringify({ success: false, error: invalidParams })
 
 		try {
 			const [result] = await pool.query(
 				'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-				[name, email, password],
+				[name, email, passwordHashed],
 			)
 			console.log(
 				`User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
 			)
 			return JSON.stringify({ success: true })
 		} catch (error) {
-			console.error(
-				'[DATABASE ERROR]: Failed to insert user in database : ',
-				error.message,
-			)
+			console.log('[DATABASE ERROR]: Failed to insert user in database : ', error.message)
 			return JSON.stringify({ success: false })
 		}
 	},

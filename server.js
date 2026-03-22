@@ -12,22 +12,28 @@ app.use(express.static(path.join(import.meta.dirname, 'src')))
 app.use(express.json())
 
 app.post('/user', async (req, res) => {
-	console.log('This is req.body:')
 	console.log(req.body)
-	const user = req.body
+
 	const { name, email, password } = req.body
-	await SQL.insert(name, email, password)
+	const DatabaseResponse = await SQL.insert(name, email, password)
+	res.send(DatabaseResponse)
 })
 
 app.get('/user', async (req, res) => {
+	const requestedID = parseInt(req.query.id)
+
+	//0 is considered as 'get all users'
+	if ((!requestedID && requestedID != 0) || requestedID < 0)
+		res.json({
+			ok: false,
+			message: 'Invalid request ID',
+		})
+
 	try {
-		const requestedID = parseInt(req.query.id)
+		console.log(typeof requestedID)
+		const userData = await SQL.read(requestedID)
 
-		requestedID
-			? console.log(`Client requested user with id: [${requestedID}]`)
-			: console.log('Client requested all users from DB')
-
-		const userData = requestedID ? await SQL.read(requestedID) : await SQL.read()
+		//Wont run if SQL.read() gives invalid response:
 		res.json({ success: true, data: userData })
 	} catch (err) {
 		res.status(404).json({
