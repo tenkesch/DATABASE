@@ -18,6 +18,12 @@ export const SQL = {
 			throw new Error(`[ DATABASE ERROR ] : Invalid Parameter : [${searchParam}]`)
 
 		const isByID = typeof searchParam === 'number'
+
+		if (!isByID && typeof searchParam != 'string') {
+			const paramType = typeof searchParam
+			throw new Error(`[ DATABASE ERROR] : Invalid Parameter type [${paramType}]`)
+		}
+
 		const isByEmail = isValidEmail()
 
 		const query = isByID
@@ -30,33 +36,37 @@ export const SQL = {
 
 		const [rows] = await pool.query(query, searchParam)
 		if (rows.length === 0)
-			throw new Error(`There is no user with such ID [${searchParam}]`)
+			throw new Error(`No user found with such query : [${searchParam}]`)
 
 		return rows
 	},
 
 	insert: async (name, email, password) => {
-		let invalidParams = []
-		if (!isValidPassword(password)) invalidParams.push('password')
-		if (!isValidEmail(email)) invalidParams.push('email')
-		if (!isValidName(name)) invalidParams.push('name')
+		;(() => {
+			let invalidParams = []
+			if (!isValidPassword(password)) invalidParams.push('password')
+			if (!isValidEmail(email)) invalidParams.push('email')
+			if (!isValidName(name)) invalidParams.push('name')
+
+			invalidParams.forEach((param) => {
+				console.log(`[DATABASE ERROR] : Invalid ${param} format`)
+			})
+
+			if (invalidParams.length)
+				return JSON.stringify({ success: false, error: invalidParams })
+		})()
 
 		const passwordHashed = await bcrypt.hash(password, 10)
-		invalidParams.forEach((param) => {
-			console.log(`[DATABASE ERROR] : Invalid ${param} format`)
-		})
-		if (invalidParams.length)
-			return JSON.stringify({ success: false, error: invalidParams })
 
 		try {
 			const [result] = await pool.query(
 				'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
 				[name, email, passwordHashed],
 			)
-			console.log(
-				`User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
-			)
-			return JSON.stringify({ success: true })
+			return JSON.stringify({
+				success: true,
+				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
+			})
 		} catch (error) {
 			console.log('[DATABASE ERROR]: Failed to insert user in database : ', error.message)
 			return JSON.stringify({ success: false })
@@ -76,8 +86,16 @@ export const SQL = {
 
 		try {
 			await pool.query(query, deleteParamater)
+			return JSON.stringify({
+				success: true,
+				message: `User with query ${deleteParamater} has been deleted successfully`,
+			})
 		} catch (error) {
-			throw new Error(`Failed to delete user with parameter [${deleteParamater}]`)
+			return JSON.stringify({
+				success: false,
+				message: `Failed to delete user with parameter [${deleteParamater}]`,
+			})
+			// throw new Error(`Failed to delete user with parameter [${deleteParamater}]`)
 		}
 	},
 }
