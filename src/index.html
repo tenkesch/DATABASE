@@ -1,43 +1,45 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>DATABASE</title>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DATABASE</title>
+    <link rel="icon" href="favicons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="favicons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="favicons/icon-512.png" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Database<span class="accent">Lab</span></h1>
+            <p class="subtitle">Search, create & manage users</p>
+        </header>
 
-		<link rel="icon" href="favicons/favicon.ico" />
-		<link rel="icon" type="image/png" sizes="192x192" href="favicons/icon-192.png" />
-		<link rel="icon" type="image/png" sizes="512x512" href="favicons/icon-512.png" />
-	</head>
-	<body>
-		<h1>Learning DATABASE Handling YAAAYYYYY</h1>
-		<p>What do you desire?</p>
-		<p>
-			<i>You can search by anything! (name, email or id)</i>
-		</p>
-		<form id="readUsersForm">
-			<input name="inputBar" type="text" placeholder="Insert ID" />
-			<button>Search</button>
-		</form>
-		<!-- <p id="SQL_Values">SQL_Values will be displayed here</p> -->
-		<div id="DIV_insertUser">
-			<form id="newUserForm">
-				<input name="userName" type="text" placeholder="Insert Name" />
-				<input name="userEmail" type="text" placeholder="Insert Email" />
-				<input name="userPassword" type="password" placeholder="Insert Password" />
-				<button>Add User to Database</button>
-			</form>
-		</div>
-	</body>
-	<style>
-		#DIV_insertUser {
-			margin-top: 20px;
-			/* background-color: orange; */
-		}
-		body {
-			background-color: rgb(34, 34, 34);
-			color: white;
-		}
-	</style>
-	<script src="client.js"></script>
+        <section class="card">
+            <h2>Search User</h2>
+            <p class="hint">Search by ID, name, or email</p>
+            <form id="readUsersForm">
+                <div class="input-row">
+                    <input name="inputBar" id="inputBar" type="text" placeholder="Enter search query..." />
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <button type="button" id="deleteButton" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+            <div id="resultArea" class="result-area hidden"></div>
+        </section>
+
+        <section class="card">
+            <h2>Add New User</h2>
+            <form id="newUserForm">
+                <input name="userName" type="text" placeholder="Name" required />
+                <input name="userEmail" type="email" placeholder="Email" required />
+                <input name="userPassword" type="password" placeholder="Password" required />
+                <button type="submit" class="btn btn-primary full-width">Add User</button>
+            </form>
+            <div id="addResultArea" class="result-area hidden"></div>
+        </section>
+    </div>
+    <script src="client.js"></script>
+</body>
 </html>

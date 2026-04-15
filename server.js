@@ -49,6 +49,10 @@ app.get('/', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'index.html'))
 })
 
+app.get('/style.css', (_req, res) => {
+	res.sendFile(path.join(import.meta.dirname, 'style.css'))
+})
+
 app.listen(PORT, () => {
 	console.log(`Server running on PORT ${PORT}`)
 })
