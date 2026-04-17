@@ -1,8 +1,6 @@
 import mysql from 'mysql2'
 import bcrypt from 'bcrypt'
 
-const HASH_SALTROUNDS = process.env.BCRYPT_SALTROUNDS
-
 const pool = mysql
 	.createPool({
 		host: process.env.SQL_HOST,
@@ -15,13 +13,13 @@ const pool = mysql
 export const SQL = {
 	read: async (searchParam = 0) => {
 		if (!isValidParam(searchParam) && !(searchParam === 0))
-			throw new Error(`[ DATABASE ERROR ] : Invalid Parameter : [${searchParam}]`)
+			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${searchParam}]`)
 
 		const isByID = typeof searchParam === 'number'
 
-		if (!isByID && typeof searchParam != 'string') {
+		if (!isByID && !(typeof searchParam === 'string')) {
 			const paramType = typeof searchParam
-			throw new Error(`[ DATABASE ERROR] : Invalid Parameter type [${paramType}]`)
+			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter type [${paramType}]`)
 		}
 
 		const isByEmail = isValidEmail()
@@ -42,19 +40,17 @@ export const SQL = {
 	},
 
 	insert: async (name, email, password) => {
-		;(() => {
-			let invalidParams = []
-			if (!isValidPassword(password)) invalidParams.push('password')
-			if (!isValidEmail(email)) invalidParams.push('email')
-			if (!isValidName(name)) invalidParams.push('name')
+		let invalidParams = []
+		if (!isValidPassword(password)) invalidParams.push('password')
+		if (!isValidEmail(email)) invalidParams.push('email')
+		if (!isValidName(name)) invalidParams.push('name')
 
+		if (invalidParams.length) {
 			invalidParams.forEach((param) => {
-				console.log(`[DATABASE ERROR] : Invalid ${param} format`)
+				console.log(`[ VALIDATION ERROR] : Invalid ${param} format`)
 			})
-
-			if (invalidParams.length)
-				return JSON.stringify({ success: false, error: invalidParams })
-		})()
+			return JSON.stringify({ success: false, error: invalidParams })
+		}
 
 		const passwordHashed = await bcrypt.hash(password, 10)
 
@@ -67,9 +63,9 @@ export const SQL = {
 				success: true,
 				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
 			})
-		} catch (error) {
-			console.log('[DATABASE ERROR]: Failed to insert user in database : ', error.message)
-			return JSON.stringify({ success: false })
+		} catch (err) {
+			console.log('[ DATABASE ERROR ]: Failed to insert user in database : ')
+			return JSON.stringify({ success: false, error: err.message })
 		}
 	},
 
