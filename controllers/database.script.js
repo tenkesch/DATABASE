@@ -71,7 +71,7 @@ export const SQL = {
 
 	delete: async (deleteParamater) => {
 		if (!isValidParam(deleteParamater))
-			throw new Error(`[ DATABASE ERROR ] : Invalid Parameter : [${deleteParamater}]`)
+			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${deleteParamater}]`)
 
 		const query =
 			typeof deleteParamater === 'string'

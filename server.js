@@ -3,6 +3,7 @@ import path from 'path'
 import express from 'express'
 import { SQL } from './controllers/database.script.js'
 import { logger } from './middlewares/logger.js'
+import { errHandler } from './middlewares/errorhandler.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -14,20 +15,23 @@ app.use(express.static(path.join(import.meta.dirname, 'src')))
 app.use(express.json())
 app.use(logger)
 
-app.post('/user', async (req, res) => {
-	console.log(req.body)
+app.post('/user', async (req, res, next) => {
+	try {
+		const { name, email, password } = req.body
+		const DatabaseResponse = await SQL.insert(name, email, password)
 
-	const { name, email, password } = req.body
-	const DatabaseResponse = await SQL.insert(name, email, password)
-	res.send(DatabaseResponse)
+		res.json({ ok: true, message: DatabaseResponse })
+	} catch (err) {
+		next(err)
+	}
 })
 
-app.get('/user', async (req, res) => {
+app.get('/user', async (req, res, next) => {
 	const requestedID = parseInt(req.query.id)
 
 	//0 is considered as 'get all users'
 	if ((!requestedID && requestedID != 0) || requestedID < 0)
-		res.json({
+		return res.status(400).json({
 			ok: false,
 			message: 'Invalid request ID',
 		})
@@ -36,12 +40,22 @@ app.get('/user', async (req, res) => {
 		const userData = await SQL.read(requestedID)
 
 		//Wont run if SQL.read() gives invalid response:
-		res.json({ success: true, data: userData })
-	} catch (err) {
-		res.status(404).json({
-			success: false,
-			message: err.message,
+		res.json({
+			ok: true,
+			data: userData,
 		})
+	} catch (err) {
+		next(err)
+	}
+})
+
+app.delete('/user', async (req, res) => {
+	const parameter = req.query.param
+	try {
+		await SQL.delete(parameter)
+		res.status(200).json({ message: 'Resource deleted successfully' })
+	} catch (err) {
+		res.status(409).json({ message: err.message, error: true })
 	}
 })
 
@@ -52,6 +66,8 @@ app.get('/', (_req, res) => {
 app.get('/style.css', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'style.css'))
 })
+
+app.use(errHandler)
 
 app.listen(PORT, () => {
 	console.log(`Server running on PORT ${PORT}`)
