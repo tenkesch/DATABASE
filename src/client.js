@@ -19,11 +19,20 @@ deleteButton.addEventListener('click', async () => {
 		return
 	}
 	console.log('Deleting user:', idToDelete)
-	// TODO: wire up your DELETE endpoint here
-	showResult(
-		resultArea,
-		`Delete requested for: ${idToDelete}\n(Wire up your DELETE endpoint)`,
-	)
+
+	try {
+		const response = await fetch('/user', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ idToDelete }),
+		})
+		const data = await response.json()
+
+		const { message, error } = data
+		showResult(resultArea, message || 'Delete request failed', !response.ok || !!error)
+	} catch (err) {
+		showResult(resultArea, '⚠ Failed to delete user', true)
+	}
 })
 
 newUserForm.addEventListener('submit', async (e) => {
@@ -69,8 +78,18 @@ readUsersForm.addEventListener('submit', async (e) => {
 	}
 
 	try {
-		const response = await getData(inputValue)
+		const response = await findUser(inputValue)
 		if (!response) return
+
+		if (!response.ok) {
+			showResult(resultArea, `⚠ ${response.message || 'Not found'}`, true)
+			return
+		}
+
+		if (!response.data || response.data.length === 0) {
+			showResult(resultArea, `⚠ ${response.message || 'No user found'}`, true)
+			return
+		}
 
 		showResult(resultArea, JSON.stringify(response.data, null, 2))
 	} catch (err) {
@@ -78,19 +97,22 @@ readUsersForm.addEventListener('submit', async (e) => {
 	}
 })
 
-async function getData(searchParam) {
+async function findUser(searchParam) {
 	const url = `/user?id=${searchParam}`
 	try {
 		const response = await fetch(url)
 		const data = await response.json()
-
-		if (!response.ok) {
-			showResult(resultArea, `⚠ ${data.message || 'Not found'}`, true)
-			return
+		return {
+			ok: response.ok,
+			data: data.data,
+			message: data.message,
 		}
-		return data
 	} catch (err) {
-		showResult(resultArea, '⚠ Failed to get data from server', true)
 		console.error('Failed to get data from Database ', err)
+		return {
+			ok: false,
+			data: [],
+			message: 'Failed to get data from server',
+		}
 	}
 }

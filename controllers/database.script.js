@@ -11,7 +11,7 @@ const pool = mysql
 	.promise()
 
 const expectedErrors = {
-	FAILED_CONNECTION: (err) => {
+	FAILED_CONNECTION: () => {
 		const err = new Error('[ DATABASE ERROR ] Failed connection with Database.')
 		err.statusCode = 500
 		err.code = 'FAILED CONNECTION WITH SQL DATABASE'
@@ -21,17 +21,21 @@ const expectedErrors = {
 
 export const SQL = {
 	read: async (searchParam = 0) => {
-		if (!isValidParam(searchParam) && !(searchParam === 0))
-			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${searchParam}]`)
+		if (parseInt(searchParam)) {
+			searchParam = parseInt(searchParam)
+
+			if (!isValidParam(searchParam) && !(searchParam === 0)) {
+				throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${searchParam}]`)
+			}
+		}
 
 		const isByID = typeof searchParam === 'number'
+		const isByEmail = isValidEmail(searchParam)
 
 		if (!isByID && !(typeof searchParam === 'string')) {
 			const paramType = typeof searchParam
 			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter type [${paramType}]`)
 		}
-
-		const isByEmail = isValidEmail()
 
 		const query = isByID
 			? searchParam === 0
@@ -40,14 +44,15 @@ export const SQL = {
 			: isByEmail
 				? 'SELECT * FROM users WHERE email=?'
 				: 'SELECT * FROM users WHERE name=?'
+		const queryValues = searchParam === 0 ? [] : [searchParam]
 
 		try {
-			const [rows] = await pool.query(query, searchParam)
+			const [rows] = await pool.query(query, queryValues)
 
 			if (rows.length === 0)
 				return {
-					ok: true,
-					data: undefined,
+					ok: false,
+					data: [],
 					message: `No user found with such query : [${searchParam}]`,
 				}
 
@@ -68,9 +73,7 @@ export const SQL = {
 				console.log(`[ VALIDATION ERROR] : Invalid ${param} format`)
 			})
 
-			return { ok: true, message: 'Bad user parameters', error: invalidParams }
-
-			throw INVALID_USER_INPUT(invalidParams)
+			return { ok: false, message: 'Bad user parameters', error: invalidParams }
 		}
 
 		try {
@@ -83,6 +86,7 @@ export const SQL = {
 			return {
 				ok: true,
 				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
+				error: undefined,
 			}
 		} catch (dbErr) {
 			const error = FAILED_CONNECTION(dbErr)

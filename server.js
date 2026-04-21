@@ -8,9 +8,10 @@ import { errorHandler } from './middlewares/errorhandler.js'
 
 const Status = {
 	OK: 200,
-	CONFLICT: 409,
-	INTERNAL_SERVER_ERROR: 500,
 	BAD_REQUEST: 400,
+	INTERNAL_SERVER_ERROR: 500,
+	NOT_FOUND: 404,
+	CONFLICT: 409,
 }
 
 const app = express()
@@ -36,10 +37,10 @@ app.post(
 app.get(
 	'/user',
 	asyncHandler(async (req, res, next) => {
-		const requestedID = parseInt(req.query.id)
+		const requestedID = req.query.id
 
 		//0 is considered as 'get all users'
-		if ((!requestedID && requestedID != 0) || requestedID < 0)
+		if ((!requestedID && requestedID !== 0) || requestedID < 0)
 			return res.status(Status.BAD_REQUEST).json({
 				ok: false,
 				message: 'Invalid request ID',
@@ -47,20 +48,31 @@ app.get(
 
 		const { ok, data, message } = await SQL.read(requestedID)
 
-		//Wont run if SQL.read() gives invalid response:
-		res.status(Status.OK).json({ ok, data, message })
+		//Wont run if SQL.read() fails to connect to database:
+		ok
+			? res.status(Status.OK).json({ ok, data, message })
+			: res.status(Status.NOT_FOUND).json({ ok, data, message })
 	}),
 )
 
 app.delete(
 	'/user',
 	asyncHandler(async (req, res) => {
-		const parameter = req.query.param
+		const { idToDelete } = parseInt(req.body)
 
-		const response = await SQL.delete(parameter)
+		if (!idToDelete || idToDelete < 0)
+			return res.status(Status.BAD_REQUEST).json({
+				ok: false,
+				message: 'Invalid request ID',
+			})
+
+		const response = await SQL.delete(idToDelete)
+		const { ok, message, error } = response
 
 		//wont run if SQL.delete() fails:
-		res.status(Status.OK).json({ message: 'Resource deleted successfully' })
+		response.ok
+			? res.status(Status.OK).json({ ok, message, error })
+			: res.status(Status.BAD_REQUEST).json({ ok, message, error })
 	}),
 )
 
