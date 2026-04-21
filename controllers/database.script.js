@@ -10,6 +10,15 @@ const pool = mysql
 	})
 	.promise()
 
+const expectedErrors = {
+	FAILED_CONNECTION: (err) => {
+		const err = new Error('[ DATABASE ERROR ] Failed connection with Database.')
+		err.statusCode = 500
+		err.code = 'FAILED CONNECTION WITH SQL DATABASE'
+		return err
+	},
+}
+
 export const SQL = {
 	read: async (searchParam = 0) => {
 		if (!isValidParam(searchParam) && !(searchParam === 0))
@@ -32,11 +41,20 @@ export const SQL = {
 				? 'SELECT * FROM users WHERE email=?'
 				: 'SELECT * FROM users WHERE name=?'
 
-		const [rows] = await pool.query(query, searchParam)
-		if (rows.length === 0)
-			throw new Error(`No user found with such query : [${searchParam}]`)
+		try {
+			const [rows] = await pool.query(query, searchParam)
 
-		return rows
+			if (rows.length === 0)
+				return {
+					ok: true,
+					data: undefined,
+					message: `No user found with such query : [${searchParam}]`,
+				}
+
+			return { ok: true, data: rows, message: 'Found user!' }
+		} catch (err) {
+			throw err
+		}
 	},
 
 	insert: async (name, email, password) => {
@@ -49,23 +67,26 @@ export const SQL = {
 			invalidParams.forEach((param) => {
 				console.log(`[ VALIDATION ERROR] : Invalid ${param} format`)
 			})
-			return JSON.stringify({ success: false, error: invalidParams })
+
+			return { ok: true, message: 'Bad user parameters', error: invalidParams }
+
+			throw INVALID_USER_INPUT(invalidParams)
 		}
 
-		const passwordHashed = await bcrypt.hash(password, 10)
-
 		try {
+			const passwordHashed = await bcrypt.hash(password, 10)
+
 			const [result] = await pool.query(
 				'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
 				[name, email, passwordHashed],
 			)
-			return JSON.stringify({
-				success: true,
+			return {
+				ok: true,
 				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
-			})
-		} catch (err) {
-			console.log('[ DATABASE ERROR ]: Failed to insert user in database : ')
-			return JSON.stringify({ success: false, error: err.message })
+			}
+		} catch (dbErr) {
+			const error = FAILED_CONNECTION(dbErr)
+			throw error
 		}
 	},
 
@@ -82,16 +103,12 @@ export const SQL = {
 
 		try {
 			await pool.query(query, deleteParamater)
-			return JSON.stringify({
-				success: true,
+			return {
+				ok: true,
 				message: `User with query ${deleteParamater} has been deleted successfully`,
-			})
+			}
 		} catch (error) {
-			return JSON.stringify({
-				success: false,
-				message: `Failed to delete user with parameter [${deleteParamater}]`,
-			})
-			// throw new Error(`Failed to delete user with parameter [${deleteParamater}]`)
+			throw new Error(`Failed to delete user with parameter [${deleteParamater}]`)
 		}
 	},
 }

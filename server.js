@@ -1,9 +1,17 @@
 import 'dotenv/config'
 import path from 'path'
 import express from 'express'
+import asyncHandler from 'express-async-handler'
 import { SQL } from './controllers/database.script.js'
 import { logger } from './middlewares/logger.js'
-import { errHandler } from './middlewares/errorhandler.js'
+import { errorHandler } from './middlewares/errorhandler.js'
+
+const Status = {
+	OK: 200,
+	CONFLICT: 409,
+	INTERNAL_SERVER_ERROR: 500,
+	BAD_REQUEST: 400,
+}
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -15,49 +23,46 @@ app.use(express.static(path.join(import.meta.dirname, 'src')))
 app.use(express.json())
 app.use(logger)
 
-app.post('/user', async (req, res, next) => {
-	try {
+app.post(
+	'/user',
+	asyncHandler(async (req, res, next) => {
 		const { name, email, password } = req.body
-		const DatabaseResponse = await SQL.insert(name, email, password)
+		const { ok, message, error } = await SQL.insert(name, email, password)
 
-		res.json({ ok: true, message: DatabaseResponse })
-	} catch (err) {
-		next(err)
-	}
-})
+		res.json({ ok, message })
+	}),
+)
 
-app.get('/user', async (req, res, next) => {
-	const requestedID = parseInt(req.query.id)
+app.get(
+	'/user',
+	asyncHandler(async (req, res, next) => {
+		const requestedID = parseInt(req.query.id)
 
-	//0 is considered as 'get all users'
-	if ((!requestedID && requestedID != 0) || requestedID < 0)
-		return res.status(400).json({
-			ok: false,
-			message: 'Invalid request ID',
-		})
+		//0 is considered as 'get all users'
+		if ((!requestedID && requestedID != 0) || requestedID < 0)
+			return res.status(Status.BAD_REQUEST).json({
+				ok: false,
+				message: 'Invalid request ID',
+			})
 
-	try {
-		const userData = await SQL.read(requestedID)
+		const { ok, data, message } = await SQL.read(requestedID)
 
 		//Wont run if SQL.read() gives invalid response:
-		res.json({
-			ok: true,
-			data: userData,
-		})
-	} catch (err) {
-		next(err)
-	}
-})
+		res.status(Status.OK).json({ ok, data, message })
+	}),
+)
 
-app.delete('/user', async (req, res) => {
-	const parameter = req.query.param
-	try {
-		await SQL.delete(parameter)
-		res.status(200).json({ message: 'Resource deleted successfully' })
-	} catch (err) {
-		res.status(409).json({ message: err.message, error: true })
-	}
-})
+app.delete(
+	'/user',
+	asyncHandler(async (req, res) => {
+		const parameter = req.query.param
+
+		const response = await SQL.delete(parameter)
+
+		//wont run if SQL.delete() fails:
+		res.status(Status.OK).json({ message: 'Resource deleted successfully' })
+	}),
+)
 
 app.get('/', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'index.html'))
@@ -67,7 +72,7 @@ app.get('/style.css', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'style.css'))
 })
 
-app.use(errHandler)
+app.use(errorHandler)
 
 app.listen(PORT, () => {
 	console.log(`Server running on PORT ${PORT}`)
