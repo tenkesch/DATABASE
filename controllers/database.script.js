@@ -10,15 +10,6 @@ const pool = mysql
 	})
 	.promise()
 
-const expectedErrors = {
-	FAILED_CONNECTION: () => {
-		const err = new Error('[ DATABASE ERROR ] Failed connection with Database.')
-		err.statusCode = 500
-		err.code = 'FAILED CONNECTION WITH SQL DATABASE'
-		return err
-	},
-}
-
 export const SQL = {
 	read: async (searchParam = 0) => {
 		if (parseInt(searchParam)) {
@@ -88,9 +79,8 @@ export const SQL = {
 				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
 				error: undefined,
 			}
-		} catch (dbErr) {
-			const error = FAILED_CONNECTION(dbErr)
-			throw error
+		} catch (err) {
+			throw err
 		}
 	},
 
