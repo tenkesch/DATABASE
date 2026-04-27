@@ -15,9 +15,8 @@ export const SQL = {
 		if (parseInt(searchParam)) {
 			searchParam = parseInt(searchParam)
 
-			if (!isValidParam(searchParam) && !(searchParam === 0)) {
+			if (!isValidParam(searchParam))
 				throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${searchParam}]`)
-			}
 		}
 
 		const isByID = typeof searchParam === 'number'
@@ -85,6 +84,8 @@ export const SQL = {
 	},
 
 	delete: async (deleteParamater) => {
+		console.log(typeof deleteParamater)
+
 		if (!isValidParam(deleteParamater))
 			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${deleteParamater}]`)
 

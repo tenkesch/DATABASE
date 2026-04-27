@@ -58,15 +58,16 @@ app.get(
 app.delete(
 	'/user',
 	asyncHandler(async (req, res) => {
-		const { idToDelete } = parseInt(req.body)
+		const { idToDelete } = req.body
+		const deleteThis = parseInt(idToDelete)
 
-		if (!idToDelete || idToDelete < 0)
+		if (!deleteThis || deleteThis < 0)
 			return res.status(Status.BAD_REQUEST).json({
 				ok: false,
 				message: 'Invalid request ID',
 			})
 
-		const response = await SQL.delete(idToDelete)
+		const response = await SQL.delete(deleteThis)
 		const { ok, message, error } = response
 
 		//wont run if SQL.delete() fails:
