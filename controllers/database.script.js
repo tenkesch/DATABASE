@@ -12,32 +12,14 @@ const pool = mysql
 
 export const SQL = {
 	read: async (searchParam = 0) => {
-		if (parseInt(searchParam)) {
-			searchParam = parseInt(searchParam)
+		const paramType = isValidSearchParam(searchParam)
+		if (!paramType)
+			throw new Error('recieved param does not belong neither to name, email or id')
 
-			if (!isValidParam(searchParam))
-				throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${searchParam}]`)
-		}
-
-		const isByID = typeof searchParam === 'number'
-		const isByEmail = isValidEmail(searchParam)
-
-		if (!isByID && !(typeof searchParam === 'string')) {
-			const paramType = typeof searchParam
-			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter type [${paramType}]`)
-		}
-
-		const query = isByID
-			? searchParam === 0
-				? 'SELECT * FROM users'
-				: 'SELECT * FROM users WHERE id=?'
-			: isByEmail
-				? 'SELECT * FROM users WHERE email=?'
-				: 'SELECT * FROM users WHERE name=?'
-		const queryValues = searchParam === 0 ? [] : [searchParam]
+		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
 		try {
-			const [rows] = await pool.query(query, queryValues)
+			const [rows] = await pool.query(query, [searchParam])
 
 			if (rows.length === 0)
 				return {
@@ -83,27 +65,21 @@ export const SQL = {
 		}
 	},
 
-	delete: async (deleteParamater) => {
-		console.log(typeof deleteParamater)
+	delete: async (deleteParameter) => {
+		const paramType = isValidSearchParam(deleteParameter)
+		if (!paramType)
+			throw new Error('recieved param does not belong neither to name, email or id')
 
-		if (!isValidParam(deleteParamater))
-			throw new Error(`[ VALIDATION ERROR ] : Invalid Parameter : [${deleteParamater}]`)
-
-		const query =
-			typeof deleteParamater === 'string'
-				? isValidEmail(deleteParamater)
-					? 'DELETE FROM users WHERE email=?'
-					: 'DELETE FROM users WHERE name=?'
-				: 'DELETE FROM users WHERE id=?'
+		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
 		try {
-			await pool.query(query, deleteParamater)
+			await pool.query(query, [deleteParameter])
 			return {
 				ok: true,
-				message: `User with query ${deleteParamater} has been deleted successfully`,
+				message: `User with query ${deleteParameter} has been deleted successfully`,
 			}
 		} catch (error) {
-			throw new Error(`Failed to delete user with parameter [${deleteParamater}]`)
+			throw new Error(`Failed to delete user with parameter [${deleteParameter}]`)
 		}
 	},
 }
@@ -134,4 +110,13 @@ function isValidParam(param) {
 		(typeof param === 'string' && param.length > 2)
 
 	return response
+}
+function isValidSearchParam(searchParam) {
+	if (typeof searchParam === 'number' && isValidParam(searchParam)) return 'id'
+	if (typeof searchParam === 'string') {
+		if (isValidName(searchParam)) return 'name'
+		if (isValidEmail(searchParam)) return 'email'
+	}
+
+	return false
 }

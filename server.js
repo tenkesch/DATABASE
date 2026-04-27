@@ -5,6 +5,7 @@ import asyncHandler from 'express-async-handler'
 import { SQL } from './controllers/database.script.js'
 import { logger } from './middlewares/logger.js'
 import { errorHandler } from './middlewares/errorhandler.js'
+import { authenticateUser } from './controllers/authentication.script.js'
 
 const Status = {
 	OK: 200,
@@ -77,8 +78,23 @@ app.delete(
 	}),
 )
 
+app.post(
+	'/login',
+	asyncHandler(async (req, res) => {
+		const { username, password } = req.body
+		const { ok, message, user } = await authenticateUser(username, password)
+
+		//won't run in controller runs into error:
+		res.json({ ok, message, user })
+	}),
+)
+
 app.get('/', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'index.html'))
+})
+
+app.get('/login', (_req, res) => {
+	res.sendFile(path.join(import.meta.dirname, 'src/login.html'))
 })
 
 app.get('/style.css', (_req, res) => {

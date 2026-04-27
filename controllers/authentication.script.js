@@ -1,31 +1,31 @@
 import bcrypt from 'bcrypt'
-import { SQL } from 'database.script.js'
+import { SQL } from './database.script.js'
 
-export async function isUserValid(recievedEmail, recievedPassword) {
-	if (!(typeof recievedEmail === string) || !(typeof recievedPassword === string))
+export async function authenticateUser(usernameRecieved, passwordRecieved) {
+	if (!(typeof usernameRecieved === string) || !(typeof passwordRecieved === string))
 		throw new Error(
 			'[INPUT ERROR] isUserValid expects both email and password to be strings.',
 		)
 
-	const foundUser = await SQL.read(recievedEmail)
-	if (!foundUser)
+	const foundUsers = await SQL.read(usernameRecieved)
+	if (!foundUsers)
 		return {
 			ok: true,
-			message: 'There is no user with such email',
+			message: 'There is no user with such name/email',
 			user: null,
 		}
 
-	const foundUser = await queryPossibleUsers(foundUser, recievedPassword)
-	const responseMessage = foundUser
-		? { ok: true, message: 'We found user you are looking for!', user: foundUser }
+	const matchingUser = await queryPossibleUsers(foundUsers, passwordRecieved)
+	const responseMessage = matchingUser
+		? { ok: true, message: 'We found user you are looking for!', user: matchingUser }
 		: { ok: true, message: 'No user found!', user: null }
 
 	return responseMessage
 }
 
-async function queryPossibleUsers(foundUser, recievedPassword) {
-	for (const user of foundUser) {
-		const passwordMatch = await bcrypt.compare(recievedPassword, user.password)
+async function queryPossibleUsers(foundUsers, passwordRecieved) {
+	for (const user of foundUsers) {
+		const passwordMatch = await bcrypt.compare(passwordRecieved, user.password)
 
 		if (passwordMatch) {
 			const data = await user.json()

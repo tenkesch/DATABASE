@@ -1,3 +1,4 @@
+//NOT BEING USED
 export function tryCatch(controller) {
 	return async (req, res, next) => {
 		try {
