@@ -73,10 +73,12 @@ export const SQL = {
 		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
 		try {
-			await pool.query(query, [deleteParameter])
+			const [rows] = await pool.query(query, [deleteParameter])
+
 			return {
 				ok: true,
-				message: `User with query ${deleteParameter} has been deleted successfully`,
+				message: `Successfully deleted [${rows.length}] rows with [${deleteParameter}] param as [${paramType}].`,
+				deletedUsers: rows,
 			}
 		} catch (error) {
 			throw new Error(`Failed to delete user with parameter [${deleteParameter}]`)
@@ -98,7 +100,7 @@ function isValidName(name) {
 }
 
 function isValidPassword(password) {
-	//accepted: lower/upper case letters, number sand symbols, lenght 4-20
+	// accepted: lower/upper case letters, number sand symbols, lenght 4-20
 	const regex = /^[A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|`~]{4,20}$/
 	const response = typeof password === 'string' && regex.test(password)
 	return response
