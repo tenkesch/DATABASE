@@ -1,5 +1,12 @@
 import mysql from 'mysql2'
 import bcrypt from 'bcrypt'
+import {
+	ConflictError,
+	BadRequestError,
+	ConnectionError,
+	NotFoundError,
+	ValidationError,
+} from '../errors/exports.error.js'
 
 const pool = mysql
 	.createPool({
@@ -68,7 +75,10 @@ export const SQL = {
 	delete: async (deleteParameter) => {
 		const paramType = isValidSearchParam(deleteParameter)
 		if (!paramType)
-			throw new Error('recieved param does not belong neither to name, email or id')
+			throw new Error({
+				ok: false,
+				message: 'recieved param does not belong neither to name, email or id',
+			})
 
 		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
@@ -116,8 +126,8 @@ function isValidParam(param) {
 function isValidSearchParam(searchParam) {
 	if (typeof searchParam === 'number' && isValidParam(searchParam)) return 'id'
 	if (typeof searchParam === 'string') {
-		if (isValidName(searchParam)) return 'name'
 		if (isValidEmail(searchParam)) return 'email'
+		if (isValidName(searchParam)) return 'name'
 	}
 
 	return false

@@ -67,13 +67,12 @@ app.delete(
 				message: 'Invalid request ID',
 			})
 
-		const response = await SQL.delete(idToDelete)
-		const { ok, message, error } = response
+		const { ok, message, deletedUsers } = await SQL.delete(idToDelete)
 
 		//wont run if SQL.delete() fails:
-		response.ok
-			? res.status(Status.OK).json({ ok, message, error })
-			: res.status(Status.BAD_REQUEST).json({ ok, message, error })
+		ok
+			? res.status(Status.OK).json({ ok, message, deletedUsers })
+			: res.status(Status.BAD_REQUEST).json({ ok, message, deletedUsers })
 	}),
 )
 
@@ -84,7 +83,9 @@ app.post(
 		const { ok, message, user } = await authenticateUser(username, password)
 
 		//won't run in controller runs into error:
-		res.json({ ok, message, user })
+		ok
+			? res.status(Status.OK).json({ ok, message, user })
+			: res.status(Status.NOT_FOUND).json({ ok, messagem, user })
 	}),
 )
 
