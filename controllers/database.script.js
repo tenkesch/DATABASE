@@ -21,7 +21,9 @@ export const SQL = {
 	read: async (searchParam = 0) => {
 		const paramType = isValidSearchParam(searchParam)
 		if (!paramType)
-			throw new Error('recieved param does not belong neither to name, email or id')
+			throw new ValidationError(
+				'recieved param does not belong neither to name, email or id',
+			)
 
 		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
@@ -30,7 +32,7 @@ export const SQL = {
 
 			if (rows.length === 0)
 				return {
-					ok: false,
+					ok: true,
 					data: [],
 					message: `No user found with such query : [${searchParam}]`,
 				}
@@ -49,10 +51,10 @@ export const SQL = {
 
 		if (invalidParams.length) {
 			invalidParams.forEach((param) => {
-				console.log(`[ VALIDATION ERROR] : Invalid ${param} format`)
+				console.log(`[BAD REQUEST] : Invalid ${param} format`)
 			})
 
-			return { ok: false, message: 'Bad user parameters', error: invalidParams }
+			throw new BadRequestError('Bad user parameters', invalidParams)
 		}
 
 		try {
@@ -65,7 +67,7 @@ export const SQL = {
 			return {
 				ok: true,
 				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,
-				error: undefined,
+				error: null,
 			}
 		} catch (err) {
 			throw err
