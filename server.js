@@ -6,25 +6,27 @@ import { SQL } from './controllers/database.script.js'
 import { logger } from './middlewares/logger.js'
 import { errorHandler } from './middlewares/errorhandler.js'
 import { authenticateUser } from './controllers/authentication.script.js'
+import { BadRequestError } from './errors/exports.error.js'
 
 const Status = {
 	OK: 200,
 	BAD_REQUEST: 400,
-	INTERNAL_SERVER_ERROR: 500,
 	NOT_FOUND: 404,
 	CONFLICT: 409,
+	INTERNAL_SERVER_ERROR: 500,
 }
 
 const app = express()
 const PORT = process.env.PORT || 3000
 if (PORT === 3000)
-	console.log('[WARNING] : PORT not found in .env file, using default value instead')
+	console.warn('[WARNING] : PORT not found in .env file, using default value instead')
 
 //middlewares
 app.use(express.static(path.join(import.meta.dirname, 'src')))
 app.use(express.json())
 app.use(logger)
 
+//Inser New User
 app.post(
 	'/user',
 	asyncHandler(async (req, res, next) => {
@@ -35,6 +37,7 @@ app.post(
 	}),
 )
 
+//Search for existing User
 app.get(
 	'/user',
 	asyncHandler(async (req, res, next) => {
@@ -42,10 +45,7 @@ app.get(
 
 		//0 is considered as 'get all users'
 		if ((!requestedID && requestedID !== 0) || requestedID < 0)
-			return res.status(Status.BAD_REQUEST).json({
-				ok: false,
-				message: 'Invalid request ID',
-			})
+			throw new BadRequestError('Invalid request ID')
 
 		const { ok, data, message } = await SQL.read(requestedID)
 
@@ -56,16 +56,13 @@ app.get(
 	}),
 )
 
+//Delete Existing User
 app.delete(
 	'/user',
 	asyncHandler(async (req, res) => {
 		const { idToDelete } = req.body
 
-		if (!idToDelete || idToDelete < 0)
-			return res.status(Status.BAD_REQUEST).json({
-				ok: false,
-				message: 'Invalid request ID',
-			})
+		if (!idToDelete || idToDelete < 0) throw new BadRequestError('Invalid request ID')
 
 		const { ok, message, deletedUsers } = await SQL.delete(idToDelete)
 
@@ -76,6 +73,7 @@ app.delete(
 	}),
 )
 
+//Login User
 app.post(
 	'/login',
 	asyncHandler(async (req, res) => {
@@ -89,14 +87,13 @@ app.post(
 	}),
 )
 
+//send Required Files:
 app.get('/', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'index.html'))
 })
-
 app.get('/login', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'src/login.html'))
 })
-
 app.get('/style.css', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'style.css'))
 })

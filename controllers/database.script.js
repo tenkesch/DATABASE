@@ -20,11 +20,12 @@ const pool = mysql
 export const SQL = {
 	read: async (searchParam = 0) => {
 		const paramType = isValidSearchParam(searchParam)
-		if (!paramType)
+		if (!paramType) {
+			// console.log(paramType)
 			throw new ValidationError(
-				'recieved param does not belong neither to name, email or id',
+				'Recieved param does not belong neither to name, email or id',
 			)
-
+		}
 		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
 		try {
@@ -57,7 +58,7 @@ export const SQL = {
 				errMessage += `[${param}] `
 			})
 
-			throw new BadRequestError(errMessage, invalidParams)
+			throw new BadRequestError(errMessage)
 		}
 
 		try {
@@ -82,10 +83,9 @@ export const SQL = {
 	delete: async (deleteParameter) => {
 		const paramType = isValidSearchParam(deleteParameter)
 		if (!paramType)
-			throw new Error({
-				ok: false,
-				message: 'recieved param does not belong neither to name, email or id',
-			})
+			throw new BadRequestError(
+				'Recieved param does not belong neither to name, email or id',
+			)
 
 		const query = `SELECT * FROM users WHERE ${paramType}=?`
 
@@ -123,18 +123,17 @@ function isValidPassword(password) {
 	return response
 }
 
-function isValidParam(param) {
-	const response =
-		(typeof param === 'number' && param > 0) ||
-		(typeof param === 'string' && param.length > 2)
+//NOT WORTH USING BECAUSE ID IS STILL RECOGNIZED AS STRING AND NOT NUMBER
+// function isValidParam(param) {
+// 	const response = parseInt(param) > 0 || (typeof param === 'string' && param.length > 2)
+// 	return response
+// }
 
-	return response
-}
 function isValidSearchParam(searchParam) {
-	if (typeof searchParam === 'number' && isValidParam(searchParam)) return 'id'
 	if (typeof searchParam === 'string') {
 		if (isValidEmail(searchParam)) return 'email'
 		if (isValidName(searchParam)) return 'name'
+		if (parseInt(searchParam) > 0) return 'id'
 	}
 
 	return false
