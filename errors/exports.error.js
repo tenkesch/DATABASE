@@ -6,16 +6,16 @@ export { NotFoundError } from './notfound.error.js'
 
 export function determineErrorName(statusCode) {
 	switch (statusCode) {
-		case 404:
-			return 'Not Found'
-		case 500:
-			return 'Internal Server Error'
 		case 400:
 			return 'Bad Request'
-		case 422:
-			return 'Validation Error'
+		case 404:
+			return 'Not Found'
 		case 409:
 			return 'Conflict Error'
+		case 422:
+			return 'Validation Error'
+		case 500:
+			return 'Internal Server Error'
 		default:
 			return 'Unexpected Server Error'
 	}
