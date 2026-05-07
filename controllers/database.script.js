@@ -50,11 +50,14 @@ export const SQL = {
 		if (!isValidName(name)) invalidParams.push('name')
 
 		if (invalidParams.length) {
+			let errMessage = `Invalid user parameters for `
+
 			invalidParams.forEach((param) => {
 				console.log(`[BAD REQUEST] : Invalid ${param} format`)
+				errMessage += `[${param}] `
 			})
 
-			throw new BadRequestError('Bad user parameters', invalidParams)
+			throw new BadRequestError(errMessage, invalidParams)
 		}
 
 		try {
@@ -64,6 +67,8 @@ export const SQL = {
 				'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
 				[name, email, passwordHashed],
 			)
+
+			//wont run if pool.query() or bcrypt.hash() fail
 			return {
 				ok: true,
 				message: `User [${name}] successfully inserted into Database with ID: [${result.insertId}]`,

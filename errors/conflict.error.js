@@ -1,5 +1,9 @@
+// import { determineErrorName } from './exports.error.js'
+
 export class ConflictError extends Error {
 	constructor(message) {
-		;(super(message), (this.name = 'ConflictError'), (this.statusCode = 409))
+		super(message)
+		this.name = 'Conflict Error'
+		this.statusCode = 409
 	}
 }
