@@ -1,10 +1,11 @@
 import bcrypt from 'bcrypt'
 import { SQL } from './database.script.js'
+import { BadRequestError } from '../errors/exports.error.js'
 
 export async function authenticateUser(usernameRecieved, passwordRecieved) {
 	if (!(typeof usernameRecieved === string) || !(typeof passwordRecieved === string))
-		throw new Error(
-			'[INPUT ERROR] isUserValid expects both email and password to be strings.',
+		throw new BadRequestError(
+			'isUserValid function expects both email and password to be strings.',
 		)
 
 	const foundUsers = await SQL.read(usernameRecieved)
@@ -27,10 +28,7 @@ async function queryPossibleUsers(foundUsers, passwordRecieved) {
 	for (const user of foundUsers) {
 		const passwordMatch = await bcrypt.compare(passwordRecieved, user.password)
 
-		if (passwordMatch) {
-			const data = await user.json()
-			return data
-		}
+		if (passwordMatch) return user
 	}
 
 	return false
