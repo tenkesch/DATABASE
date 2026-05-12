@@ -88,11 +88,12 @@ app.post(
 )
 
 //send Required Files:
+//NOT NEEDED ??
 app.get('/', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'index.html'))
 })
 app.get('/login', (_req, res) => {
-	res.sendFile(path.join(import.meta.dirname, 'src/login.html'))
+	res.sendFile(path.join(import.meta.dirname, 'login.html'))
 })
 app.get('/style.css', (_req, res) => {
 	res.sendFile(path.join(import.meta.dirname, 'style.css'))

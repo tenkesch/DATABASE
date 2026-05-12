@@ -16,12 +16,13 @@ export async function authenticateUser(usernameRecieved, passwordRecieved) {
 			user: null,
 		}
 
+	const foundUsersType = typeof foundUsers
+	console.log(`Type of Found users is: [${foundUsersType}]`)
+
 	const matchingUser = await queryPossibleUsers(foundUsers, passwordRecieved)
-	const responseMessage = matchingUser
+	return matchingUser
 		? { ok: true, message: 'We found user you are looking for!', user: matchingUser }
 		: { ok: true, message: 'No user found!', user: null }
-
-	return responseMessage
 }
 
 async function queryPossibleUsers(foundUsers, passwordRecieved) {

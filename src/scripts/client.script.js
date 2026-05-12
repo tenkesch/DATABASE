@@ -26,43 +26,19 @@ deleteButton.addEventListener('click', async () => {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ idToDelete }),
 		})
-		const data = await response.json()
 
-		const { message, error } = data
-		showResult(resultArea, message || 'Delete request failed', !response.ok || !!error)
+		const { message, error } = await response.json()
+
+		showResult(
+			resultArea,
+			message || '[WARNING] : No message recieved from server',
+			!response.ok || !!error,
+		)
 	} catch (err) {
 		showResult(resultArea, '⚠ Failed to delete user', true)
 	}
 })
-// userLogin.addEventListener('submit', async (e) => {
-// 	e.preventDefault()
 
-// 	const formData = new FormData(e.target)
-// 	const dataToSend = {
-// 		username: formData.get('userName'),
-// 		password: formData.get('userPassword'),
-// 	}
-
-// 	try {
-// 		const response = await fetch('/login', {
-// 			method: 'POST',
-// 			headers: { 'Content-Type': 'application/json' },
-// 			body: JSON.stringify(dataToSend),
-// 		})
-
-// 		const data = await response.json()
-
-// 		if (!response.ok) {
-// 			showResult(addResultArea, `⚠ ${data.message || 'Error logging in user'}`, true)
-// 			return
-// 		}
-
-// 		showResult(addResultArea, '✓ User logged in!\n' + JSON.stringify(data, null, 2))
-// 		e.target.reset()
-// 	} catch (err) {
-// 		showResult(addResultArea, '⚠ Failed to reach server', true)
-// 	}
-// })
 userRegister.addEventListener('submit', async (e) => {
 	e.preventDefault()
 
@@ -108,6 +84,7 @@ readUsersForm.addEventListener('submit', async (e) => {
 	try {
 		const response = await findUser(inputValue)
 		if (!response) return
+		console.log(response)
 
 		if (!response.ok) {
 			showResult(resultArea, `⚠ ${response.message || 'Not found'}`, true)
