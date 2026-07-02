@@ -1,0 +1,5 @@
+First bigger back-end project that I personally programmed line by line with deep thinking about how every part of code works. I asked other, more advanced developers, to review my code and stage imperfections and studied their critics and followed along.
+
+In this project, I used technologies like MySQL, bCrypt, ExpressJS.
+
+I was noted that there are already libraries that handle the database control, but i wanted to make one myself so I have deeper understanding of how and why parts of my code work that way, same goes for Authentication library.
